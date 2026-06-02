@@ -7,12 +7,17 @@ mod window;
 
 use tauri::WindowEvent;
 
-/// Parse `--badge-attr <value>` from the command-line arguments.
+/// Check whether a boolean flag is present in the command-line arguments.
+fn has_flag(flag: &str) -> bool {
+    std::env::args().any(|a| a == flag)
+}
+
+/// Parse a `--key <value>` pair from the command-line arguments.
 /// Returns `None` if the flag is not provided.
-fn parse_badge_attr() -> Option<String> {
+fn parse_option(flag: &str) -> Option<String> {
     let args: Vec<String> = std::env::args().collect();
     for i in 0..args.len() {
-        if args[i] == "--badge-attr" {
+        if args[i] == flag {
             if let Some(val) = args.get(i + 1) {
                 return Some(val.clone());
             }
@@ -22,14 +27,15 @@ fn parse_badge_attr() -> Option<String> {
 }
 
 fn main() {
-    let badge_attr = parse_badge_attr();
+    let badge_attr = parse_option("--badge-attr");
+    let background = has_flag("--background");
 
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![commands::update_unread_count, commands::send_notification])
         .setup(move |app| {
-            window::create(app, badge_attr.as_deref())?;
+            window::create(app, badge_attr.as_deref(), background)?;
             tray::setup(app)?;
             Ok(())
         })

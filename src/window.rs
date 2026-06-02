@@ -13,9 +13,11 @@ const NOTIFICATION_SCRIPT: &str = include_str!("notifications.js");
 /// count badge element inside the inbox sidebar link. When `None`, badge
 /// detection is disabled. Configurable via the `--badge-attr` CLI flag.
 ///
+/// When `background` is true the window starts hidden (tray-only).
+///
 /// The notification-bridging script is injected after every page load so it
 /// survives SPA navigations and redirects within linear.app.
-pub fn create(app: &tauri::App, badge_attr: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn create(app: &tauri::App, badge_attr: Option<&str>, background: bool) -> Result<(), Box<dyn std::error::Error>> {
     let url = LINEAR_URL
         .parse()
         .expect("hardcoded Linear URL is invalid");
@@ -34,6 +36,7 @@ pub fn create(app: &tauri::App, badge_attr: Option<&str>) -> Result<(), Box<dyn 
         .min_inner_size(800.0, 600.0)
         .resizable(true)
         .decorations(false)
+        .visible(!background)
         .zoom_hotkeys_enabled(true)
         .on_page_load(move |webview, payload| {
             if payload.event() == PageLoadEvent::Finished {

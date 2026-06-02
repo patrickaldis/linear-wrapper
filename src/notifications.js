@@ -46,9 +46,34 @@
 
     // --- Unread count detection ------------------------------------------------
 
+    // Linear's inbox sidebar link contains a count badge. We find the inbox
+    // link by href, then locate the badge element and read a configured
+    // attribute for the numeric count.
+    //
+    // window.__BADGE_ATTR specifies which attribute on the badge element
+    // contains the numeric count (injected by Rust from the --badge-attr
+    // CLI flag). When not provided, unread detection is disabled.
+
+    var BADGE_ATTR = window.__BADGE_ATTR || null;
+
     function getUnreadCount() {
-        // Placeholder: actual Linear notification count extraction will be
-        // implemented later.
+        if (!BADGE_ATTR) return 0;
+
+        // Find the inbox sidebar link
+        var inboxLink = document.querySelector('a[href$="/inbox"]');
+        if (!inboxLink) return 0;
+
+        // Look for any element inside the link that has the configured attribute
+        var badge = inboxLink.querySelector('[' + BADGE_ATTR + ']');
+        if (!badge) return 0;
+
+        // Read the attribute value as the count
+        var label = badge.getAttribute(BADGE_ATTR);
+        if (label) {
+            var n = parseInt(label, 10);
+            if (!isNaN(n)) return n;
+        }
+
         return 0;
     }
 
